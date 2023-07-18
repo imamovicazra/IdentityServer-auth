@@ -1,11 +1,12 @@
+using AutoMapper;
+using Identity.API.AutoMapper;
+using Identity.API.Extensions;
 using Identity.Database;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using System;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
-
+ 
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -13,6 +14,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("IdentityDb")));
+builder.Services.AddIdentityServerConfiguration(builder.Configuration);
+
+//builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
+builder.Services.AddSingleton(sp => new MapperConfiguration(cfg =>
+{
+    cfg.AddProfile(new AutoMapperProfile());
+}).CreateMapper());
 
 
 
@@ -30,5 +38,9 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+app.UseIdentityServer();
 
+await app.UseIdentityServerDataAsync(builder.Configuration)
+            .ConfigureAwait(false);
+        
 app.Run();
