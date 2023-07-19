@@ -40,7 +40,7 @@ namespace Identity.API.Configuration
                 {
                     ClientId = InternalClients.MyAPI,
                     AllowedGrantTypes = GrantTypes.ClientCredentials,
-                    ClientSecrets = { new Secret(Environment.GetEnvironmentVariable("myapi_secret").Sha256()) },
+                    ClientSecrets = { new Secret(HashExtensions.Sha256("oilfGG9494FBBFF44gBBfsopFF4GG"))},
                     AllowedScopes = new List<string>
                     {
                         IdentityServerConstants.StandardScopes.OpenId,
@@ -51,7 +51,7 @@ namespace Identity.API.Configuration
                 {
                     ClientId = InternalClients.Mobile,
                     AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
-                    ClientSecrets = { new Secret(Environment.GetEnvironmentVariable("mobile_client_secret").Sha256()) },
+                    ClientSecrets = { new Secret(HashExtensions.Sha256("oilfGG9494FBBskls44gBBfsopFF4GG")) },
                     AllowedScopes = new List<string>
                     {
                         InternalApis.MyAPI,
@@ -68,7 +68,7 @@ namespace Identity.API.Configuration
                 {
                     ClientId = InternalClients.Web,
                     AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
-                    ClientSecrets = { new Secret(Environment.GetEnvironmentVariable("web_client_secret").Sha256()) },
+                    ClientSecrets = {new Secret(HashExtensions.Sha256("3567fbffHFF4iofhkfFfH8")) },
                     AllowedScopes = new List<string>
                     {
                         InternalApis.MyAPI,
