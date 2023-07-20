@@ -2,6 +2,11 @@ using AutoMapper;
 using Identity.API.AutoMapper;
 using Identity.API.Extensions;
 using Identity.Database;
+using Identity.Model.Entities;
+using Identity.Service.Interfaces;
+using Identity.Service.Services;
+using IdentityServer4.AspNetIdentity;
+using IdentityServer4.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -16,13 +21,14 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("IdentityDb")));
 builder.Services.AddIdentityServerConfiguration(builder.Configuration);
 
-//builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 builder.Services.AddSingleton(sp => new MapperConfiguration(cfg =>
 {
     cfg.AddProfile(new AutoMapperProfile());
 }).CreateMapper());
 
 
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IIdentityUserService<ApplicationUser>, IdentityUserService<ApplicationUser>>();
 
 var app = builder.Build();
 
