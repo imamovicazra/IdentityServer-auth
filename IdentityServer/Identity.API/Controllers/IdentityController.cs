@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 using System.Security.Claims;
 
 namespace Identity.API.Controllers
@@ -28,6 +29,7 @@ namespace Identity.API.Controllers
         [HttpPost("register")]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(IdentityResult), StatusCodes.Status201Created)]
+        [SwaggerOperation("Register new user")]
         public async Task<ActionResult<IdentityResult>> Register([FromBody] ApplicationUserRequest request)
         {
             try
@@ -49,6 +51,7 @@ namespace Identity.API.Controllers
         [HttpGet("users")]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+        [SwaggerOperation("Get information about currently logged in user")]
         public async Task<ActionResult<UserResponse>> GetUser()
         {
             try
