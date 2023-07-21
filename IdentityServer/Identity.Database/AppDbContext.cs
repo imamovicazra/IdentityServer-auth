@@ -1,4 +1,5 @@
-﻿using Identity.Model.Entities;
+﻿using EntityFrameworkCore.Triggers;
+using Identity.Model.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -13,5 +14,22 @@ namespace Identity.Database
     {
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options) { }
+
+        public override Int32 SaveChanges()
+        {
+            return this.SaveChangesWithTriggers(base.SaveChanges, acceptAllChangesOnSuccess: true);
+        }
+        public override Int32 SaveChanges(Boolean acceptAllChangesOnSuccess)
+        {
+            return this.SaveChangesWithTriggers(base.SaveChanges, acceptAllChangesOnSuccess);
+        }
+        public override Task<Int32> SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return this.SaveChangesWithTriggersAsync(base.SaveChangesAsync, acceptAllChangesOnSuccess: true, cancellationToken: cancellationToken);
+        }
+        public override Task<Int32> SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return this.SaveChangesWithTriggersAsync(base.SaveChangesAsync, acceptAllChangesOnSuccess, cancellationToken);
+        }
     }
 }

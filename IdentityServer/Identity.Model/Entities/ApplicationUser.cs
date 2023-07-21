@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Identity.Model.Entities
 {
-    public class ApplicationUser : IdentityUser
+    public class ApplicationUser : IdentityUser, ITrackable
     {
         public string FirstName { get; set; }
         public string LastName { get; set; }

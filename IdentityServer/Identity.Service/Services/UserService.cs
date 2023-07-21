@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Identity.Database;
+using Identity.Model.Constants.Roles;
 using Identity.Model.DTOs.Requests;
 using Identity.Model.DTOs.Responses;
 using Identity.Model.Entities;
@@ -7,6 +8,8 @@ using Identity.Service.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Security.Claims;
+using System.Transactions;
 
 namespace Identity.Service.Services
 {
@@ -57,9 +60,37 @@ namespace Identity.Service.Services
             }
         }
 
-        public Task<IdentityResult> RegisterAsync(ApplicationUserRequest request)
+        public async Task<IdentityResult> RegisterAsync(ApplicationUserRequest request)
         {
-            throw new NotImplementedException();
+            try
+            {
+                ApplicationUser applicationUser = _mapper.Map<ApplicationUserRequest, ApplicationUser>(request);
+                IdentityResult identityResult = null;
+
+                using (TransactionScope scope = new(scopeOption: TransactionScopeOption.Required,
+                    transactionOptions: new TransactionOptions() { IsolationLevel = IsolationLevel.ReadUncommitted, Timeout = TimeSpan.Zero },
+                    asyncFlowOption: TransactionScopeAsyncFlowOption.Enabled))
+                {
+                    identityResult = await _userManager.CreateAsync(applicationUser, request.Password).ConfigureAwait(false);
+
+                    if (identityResult.Succeeded)
+                    {
+                        await _userManager.AddClaimsAsync(applicationUser, new List<Claim>() {
+                            new Claim("email", applicationUser.Email)
+                        }).ConfigureAwait(false);
+                        await _userManager.AddToRolesAsync(applicationUser, new List<string>() { Roles.UserBasic })
+                            .ConfigureAwait(false); // Define user roles on registration
+                    }
+                    scope.Complete();
+                }
+                return identityResult;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, nameof(RegisterAsync));
+                throw;
+            }
+
         }
     }
 }
