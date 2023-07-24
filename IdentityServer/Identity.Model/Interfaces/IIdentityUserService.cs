@@ -6,7 +6,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Identity.Service.Interfaces
+namespace Identity.Model.Interfaces
 {
     public interface IIdentityUserService<TUser> where TUser : IdentityUser
     {

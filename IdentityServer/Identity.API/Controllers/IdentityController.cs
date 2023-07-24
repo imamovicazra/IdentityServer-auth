@@ -2,7 +2,7 @@
 using Identity.Model.DTOs.Requests;
 using Identity.Model.DTOs.Responses;
 using Identity.Model.Responses;
-using Identity.Service.Interfaces;
+using Identity.Model.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;

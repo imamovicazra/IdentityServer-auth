@@ -4,12 +4,20 @@ using Identity.Model.Constants.Roles;
 using Identity.Model.DTOs.Requests;
 using Identity.Model.DTOs.Responses;
 using Identity.Model.Entities;
-using Identity.Service.Interfaces;
+using Identity.Model.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
+using System.Text;
 using System.Transactions;
+using Identity.Model.Extensions;
+using IdentityServer4.Models;
+using Org.BouncyCastle.Asn1.Ocsp;
+using System;
+using Microsoft.AspNetCore.Http;
+
 
 namespace Identity.Service.Services
 {
@@ -20,15 +28,18 @@ namespace Identity.Service.Services
         private readonly ILogger<UserService> _logger;
         private readonly AppDbContext _appDbContext;
         private readonly UserManager<ApplicationUser> _userManager;
-
+        private readonly HttpRequest _request;
+        IAuthenticationEmailService _authenticationEmailService;
         public UserService(IConfiguration config,IMapper mapper, ILogger<UserService> logger,
-            AppDbContext dbContext, UserManager<ApplicationUser> userManager)
+            AppDbContext dbContext, UserManager<ApplicationUser> userManager, IHttpContextAccessor httpContextAccessor,IAuthenticationEmailService authenticationEmailService)
         {
             _config= config; 
             _mapper= mapper;
             _logger= logger;
             _appDbContext= dbContext;
             _userManager= userManager;
+            _request=httpContextAccessor.HttpContext.Request;
+            _authenticationEmailService = authenticationEmailService;
         }
 
         public async Task<UserResponse> GetUserAsync(string userId, string email)
@@ -66,7 +77,8 @@ namespace Identity.Service.Services
             {
                 ApplicationUser applicationUser = _mapper.Map<ApplicationUserRequest, ApplicationUser>(request);
                 IdentityResult identityResult = null;
-
+                //A TransactionScope is used to create a transaction that encompasses multiple operations and ensures that
+                //either all the operations within the scope succeed (commit) or all of them fail (rollback).
                 using (TransactionScope scope = new(scopeOption: TransactionScopeOption.Required,
                     transactionOptions: new TransactionOptions() { IsolationLevel = IsolationLevel.ReadUncommitted, Timeout = TimeSpan.Zero },
                     asyncFlowOption: TransactionScopeAsyncFlowOption.Enabled))
@@ -79,7 +91,16 @@ namespace Identity.Service.Services
                             new Claim("email", applicationUser.Email)
                         }).ConfigureAwait(false);
                         await _userManager.AddToRolesAsync(applicationUser, new List<string>() { Roles.UserBasic })
-                            .ConfigureAwait(false); // Define user roles on registration
+                            .ConfigureAwait(false);
+
+                        //Sending confirmation email                      
+
+                        var token = await _userManager.GenerateEmailConfirmationTokenAsync(applicationUser).ConfigureAwait(false);
+                        string url = $"{_request.Scheme}://{_request.Host}/api/User/verify?version=1.0/email={applicationUser.Email}&token={token}";
+
+                        Dictionary<string, string> bodyParameters = new() { { nameof(url), url } };
+
+                        _authenticationEmailService.SendAsync(Model.Constants.Email.Type.Verification, applicationUser.Email, bodyParameters);
                     }
                     scope.Complete();
                 }
@@ -92,5 +113,7 @@ namespace Identity.Service.Services
             }
 
         }
+
+       
     }
 }

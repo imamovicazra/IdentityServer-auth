@@ -1,5 +1,5 @@
 ﻿using Identity.Model.Entities;
-using Identity.Service.Interfaces;
+using Identity.Model.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using System;

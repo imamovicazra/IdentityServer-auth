@@ -3,7 +3,7 @@ using Identity.Model.DTOs.Responses;
 using Microsoft.AspNetCore.Identity;
 
 
-namespace Identity.Service.Interfaces
+namespace Identity.Model.Interfaces
 {
     public interface IUserService
     {

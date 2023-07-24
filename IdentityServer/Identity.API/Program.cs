@@ -1,14 +1,17 @@
 using AutoMapper;
 using Identity.API.AutoMapper;
+using Identity.API.Configuration;
 using Identity.API.Extensions;
 using Identity.Database;
+using Identity.Model.DTOs.Email.Types;
 using Identity.Model.Entities;
-using Identity.Service.Interfaces;
+using Identity.Model.Interfaces;
 using Identity.Service.Services;
-using IdentityServer4.AspNetIdentity;
-using IdentityServer4.Validation;
+using MailKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using NETCore.MailKit.Extensions;
+using NETCore.MailKit.Infrastructure.Internal;
 
 var builder = WebApplication.CreateBuilder(args);
  
@@ -28,8 +31,32 @@ builder.Services.AddSingleton(sp => new MapperConfiguration(cfg =>
 }).CreateMapper());
 
 
+var applicationConfiguration = builder.Configuration.GetSection("MailSettings").Get<MailSettings>();
+builder.Services.AddMailKit(config =>
+{
+    config.UseMailKit(new MailKitOptions()
+    {
+        Server = applicationConfiguration.Host,
+        Port = applicationConfiguration.Port,
+        Security = applicationConfiguration.UseStartTls,
+        SenderName = applicationConfiguration.DisplayName,
+        SenderEmail = applicationConfiguration.From,
+        Account =applicationConfiguration.UserName,
+        Password = applicationConfiguration.Password
+    });
+});
+
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IIdentityUserService<ApplicationUser>, IdentityUserService<ApplicationUser>>();
+builder.Services.AddSingleton<List<IEmailClassifier>>(_ => {
+    return new List<IEmailClassifier>() {
+                    new Verification(),
+                    new ForgotPassword(),
+                    new ChangePassword(),
+                };
+});
+
+builder.Services.AddScoped<IAuthenticationEmailService, AuthenticationEmailService>();
 
 var app = builder.Build();
 

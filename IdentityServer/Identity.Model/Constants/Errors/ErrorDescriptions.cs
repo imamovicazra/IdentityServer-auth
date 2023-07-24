@@ -10,5 +10,7 @@ namespace Identity.Model.Constants
     {
         public const string UserDoesNotExistWithId = "User with that ID does not exist";
         public const string UserDoesNotExistWithEmail = "User with that email does not exist";
+        public const string EmailNotConfirmed = "Email is not confirmed";
+        public const string UserAlreadyVerified = "User is already verified";
     }
 }
