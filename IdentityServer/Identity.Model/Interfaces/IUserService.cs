@@ -9,5 +9,6 @@ namespace Identity.Model.Interfaces
     {
         Task<IdentityResult> RegisterAsync(ApplicationUserRequest request);
         Task<UserResponse> GetUserAsync(string userId, string email);
+        Task<IdentityResult> VerifyEmailAsync(EmailVerificationRequest request);
     }
 }

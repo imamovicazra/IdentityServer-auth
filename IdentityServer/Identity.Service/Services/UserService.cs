@@ -17,7 +17,8 @@ using IdentityServer4.Models;
 using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 using Microsoft.AspNetCore.Http;
-
+using Identity.Model.Constants;
+using IdentityModel;
 
 namespace Identity.Service.Services
 {
@@ -94,9 +95,9 @@ namespace Identity.Service.Services
                             .ConfigureAwait(false);
 
                         //Sending confirmation email                      
-
+                        
                         var token = await _userManager.GenerateEmailConfirmationTokenAsync(applicationUser).ConfigureAwait(false);
-                        string url = $"{_request.Scheme}://{_request.Host}/api/User/verify?version=1.0/email={applicationUser.Email}&token={token}";
+                        string url = $"{_request.Scheme}://{_request.Host}/api/Identity/verify?email={applicationUser.Email}&token={token}";
 
                         Dictionary<string, string> bodyParameters = new() { { nameof(url), url } };
 
@@ -113,7 +114,39 @@ namespace Identity.Service.Services
             }
 
         }
+        public async Task<IdentityResult> VerifyEmailAsync(EmailVerificationRequest request)
+        {
+            try
+            {
+                ApplicationUser user = await _userManager.FindByEmailAsync(request.Email);
+                if (user is null)
+                {
+                    IdentityError error = new()
+                    {
+                        Code = StatusCodes.Status404NotFound.ToString(),
+                        Description = ErrorDescriptions.UserDoesNotExistWithEmail
+                    }; 
 
-       
+                    return IdentityResult.Failed(error);
+                }
+
+                var result = await _userManager.ConfirmEmailAsync(user, request.Token).ConfigureAwait(false);
+
+                var claimsResult = await _userManager.AddClaimsAsync(user, new Claim[]{
+                    new Claim(JwtClaimTypes.Email, user.Email),
+                }).ConfigureAwait(false);
+
+                if (!claimsResult.Succeeded)
+                    throw new Exception(claimsResult.Errors.ToString());
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message, nameof(VerifyEmailAsync));
+                throw ex;
+            }
+        }
+
     }
 }

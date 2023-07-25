@@ -69,5 +69,29 @@ namespace Identity.API.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
+
+        [AllowAnonymous]
+        [HttpPost("verify")]
+        [ProducesResponseType(typeof(IdentityResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<IdentityError>), StatusCodes.Status400BadRequest)]
+        [SwaggerOperation("Confirm email address")]
+        public async Task<ActionResult<IdentityResult>> VerifyEmailAsync([FromBody] EmailVerificationRequest request)
+        {
+            try
+            {
+                var result = await _userService.VerifyEmailAsync(request)
+                    .ConfigureAwait(false);
+
+                if (!result.Succeeded)
+                    return BadRequest(result.Errors);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message, nameof(VerifyEmailAsync));
+                throw ex;
+            }
+        }
     }
 }
