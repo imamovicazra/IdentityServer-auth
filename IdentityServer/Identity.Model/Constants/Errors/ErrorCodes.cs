@@ -11,5 +11,6 @@ namespace Identity.Model.Constants
         public const string UserNotFound = "UserNotFound";
         public const string UserNotVerified = "UserNotVerified";
         public const string UserAlreadyVerified = "UserAlreadyVerified";
+        public const string InvalidGrant = "InvalidGrant";
     }
 }

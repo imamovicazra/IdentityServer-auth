@@ -93,5 +93,34 @@ namespace Identity.API.Controllers
                 throw ex;
             }
         }
+
+        [AllowAnonymous]
+        [HttpPost("token")]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(AccessTokenResponse), StatusCodes.Status200OK)]
+        [SwaggerOperation("Login method")]
+        public async Task<ActionResult<AccessTokenResponse>> Token([FromBody] TokenRequest request)
+        {
+            try
+            {
+                var result = await _userService.TokenAsync(request).ConfigureAwait(false);
+
+                if (result is null)
+                    return BadRequest(new ApiErrorResponse(ErrorCodes.InvalidGrant, ErrorDescriptions.InvalidGrantType));
+
+                if (result.IsError)
+                    return BadRequest(new ApiErrorResponse(result.Error, result.ErrorDescription));
+
+                return Ok(new AccessTokenResponse(
+                    result.AccessToken,
+                    result.RefreshToken,
+                    result.ExpiresIn));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "POST:/token");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
     }
 }

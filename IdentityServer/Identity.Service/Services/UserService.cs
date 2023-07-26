@@ -19,6 +19,7 @@ using System;
 using Microsoft.AspNetCore.Http;
 using Identity.Model.Constants;
 using IdentityModel;
+using IdentityModel.Client;
 
 namespace Identity.Service.Services
 {
@@ -30,9 +31,11 @@ namespace Identity.Service.Services
         private readonly AppDbContext _appDbContext;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly HttpRequest _request;
+        private readonly IHttpClientFactory _clientFactory;
         IAuthenticationEmailService _authenticationEmailService;
         public UserService(IConfiguration config,IMapper mapper, ILogger<UserService> logger,
-            AppDbContext dbContext, UserManager<ApplicationUser> userManager, IHttpContextAccessor httpContextAccessor,IAuthenticationEmailService authenticationEmailService)
+            AppDbContext dbContext, UserManager<ApplicationUser> userManager, IHttpContextAccessor httpContextAccessor,
+            IAuthenticationEmailService authenticationEmailService, IHttpClientFactory clientFactory)
         {
             _config= config; 
             _mapper= mapper;
@@ -41,6 +44,7 @@ namespace Identity.Service.Services
             _userManager= userManager;
             _request=httpContextAccessor.HttpContext.Request;
             _authenticationEmailService = authenticationEmailService;
+            _clientFactory= clientFactory;
         }
 
         public async Task<UserResponse> GetUserAsync(string userId, string email)
@@ -147,6 +151,53 @@ namespace Identity.Service.Services
                 throw ex;
             }
         }
+
+        public async Task<TokenResponse> TokenAsync(Model.DTOs.Requests.TokenRequest request)
+        {
+            try
+            {
+                var client = _clientFactory.CreateClient();
+                var cache = new DiscoveryCache(_config["AuthApiUrl"]);
+                var disco = await cache.GetAsync()
+                    .ConfigureAwait(false);
+                if (disco.IsError)
+                    throw new Exception(disco.Error);
+
+                switch (request.GrantType)
+                {
+                    case OidcConstants.GrantTypes.Password:
+                        var passwordFlow = await client.RequestPasswordTokenAsync(new PasswordTokenRequest()
+                        {
+                            Address = disco.TokenEndpoint,
+                            ClientId = request.ClientId,
+                            ClientSecret = request.ClientSecret,
+                            Scope = request.Scope,
+                            UserName = request.Email,
+                            Password = request.Password
+                        }).ConfigureAwait(false);
+
+                        return passwordFlow;
+                    case OidcConstants.GrantTypes.ClientCredentials:
+                        var clientCredentialsFlow = await client.RequestClientCredentialsTokenAsync(new ClientCredentialsTokenRequest()
+                        {
+                            Address = disco.TokenEndpoint,
+                            ClientId = request.ClientId,
+                            ClientSecret = request.ClientSecret,
+                            Scope = request.Scope,
+                        }).ConfigureAwait(false);
+
+                        return clientCredentialsFlow;
+                    default:
+                        return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, nameof(TokenAsync));
+                throw;
+            }
+        }
+
 
     }
 }
