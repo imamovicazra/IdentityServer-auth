@@ -3,11 +3,13 @@ using Identity.API.AutoMapper;
 using Identity.API.Configuration;
 using Identity.API.Extensions;
 using Identity.Database;
+using Identity.Model.Constants.IdentityConfig;
 using Identity.Model.DTOs.Email.Types;
 using Identity.Model.Entities;
 using Identity.Model.Interfaces;
 using Identity.Service.Services;
 using MailKit;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NETCore.MailKit.Extensions;
@@ -30,6 +32,13 @@ builder.Services.AddSingleton(sp => new MapperConfiguration(cfg =>
     cfg.AddProfile(new AutoMapperProfile());
 }).CreateMapper());
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = builder.Configuration.GetSection("AuthApiUrl").Value;
+                    options.RequireHttpsMetadata = true;
+                    options.Audience = InternalApis.IdentityServer;
+                });
 
 var applicationConfiguration = builder.Configuration.GetSection("MailSettings").Get<MailSettings>();
 builder.Services.AddMailKit(config =>
@@ -70,6 +79,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+app.UseAuthentication();
 
 app.MapControllers();
 app.UseIdentityServer();
