@@ -225,5 +225,34 @@ namespace Identity.Service.Services
                 throw;
             }
         }
+
+        public async Task<TokenRevocationResponse> RevokeTokenAsync(RefreshTokenRequestDTO request)
+        {
+            try
+            {
+                var client = _clientFactory.CreateClient();
+                var cache = new DiscoveryCache(_config["AuthApiUrl"]);
+                var disco = await cache.GetAsync()
+                                       .ConfigureAwait(false);
+
+                if (disco.IsError)
+                    throw new Exception(disco.Error);
+
+                var revokeResult = await client.RevokeTokenAsync(new TokenRevocationRequest
+                {
+                    Address = disco.RevocationEndpoint,
+                    ClientId = request.ClientId,
+                    ClientSecret = request.ClientSecret,
+                    Token = request.RefreshToken
+                }).ConfigureAwait(false);
+
+                return revokeResult;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, nameof(RevokeTokenAsync));
+                throw;
+            }
+        }
     }
 }

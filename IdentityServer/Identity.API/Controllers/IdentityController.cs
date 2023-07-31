@@ -150,5 +150,28 @@ namespace Identity.API.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
+
+        [AllowAnonymous]
+        [HttpPost("token/revoke")]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status200OK)]
+        [SwaggerOperation("Revoke refresh token")]
+        public async Task<IActionResult> RevokeToken([FromBody] RefreshTokenRequestDTO request)
+        {
+            try
+            {
+                var result = await _userService.RevokeTokenAsync(request).ConfigureAwait(false);
+
+                if (result.IsError)
+                    return BadRequest(new ApiErrorResponse(result.Error, null));
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "POST:/token/revoke");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
     }
 }
