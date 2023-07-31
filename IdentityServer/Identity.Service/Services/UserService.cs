@@ -198,6 +198,32 @@ namespace Identity.Service.Services
             }
         }
 
+        public async Task<TokenResponse> RefreshTokenAsync(RefreshTokenRequestDTO request)
+        {
+            try
+            {
+                var client = _clientFactory.CreateClient();
+                var cache = new DiscoveryCache(_config["AuthApiUrl"]);
+                var disco = await cache.GetAsync()
+                                       .ConfigureAwait(false);
+                if (disco.IsError)
+                    throw new Exception(disco.Error);
 
+                var refreshToken = await client.RequestRefreshTokenAsync(new RefreshTokenRequest()
+                {
+                    Address = disco.TokenEndpoint,
+                    ClientId = request.ClientId,
+                    ClientSecret = request.ClientSecret,
+                    RefreshToken = request.RefreshToken
+                }).ConfigureAwait(false);
+
+                return refreshToken;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, nameof(RefreshTokenAsync));
+                throw;
+            }
+        }
     }
 }

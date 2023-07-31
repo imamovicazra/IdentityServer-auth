@@ -31,7 +31,7 @@ namespace Identity.Model.DTOs.Requests
         public string RefreshToken { get; set; }
     }
 
-    public class RefreshTokenRequest
+    public class RefreshTokenRequestDTO
     {
         [Required]
         public string ClientId { get; set; }

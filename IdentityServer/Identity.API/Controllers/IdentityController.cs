@@ -124,5 +124,31 @@ namespace Identity.API.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
+
+        [AllowAnonymous]
+        [HttpPost("token/refresh")]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(RefreshTokenResponse), StatusCodes.Status200OK)]
+        [SwaggerOperation("Provide new access and refresh token")]
+        public async Task<ActionResult<RefreshTokenResponse>> RefreshToken([FromBody] RefreshTokenRequestDTO request)
+        {
+            try
+            {
+                var result = await _userService.RefreshTokenAsync(request).ConfigureAwait(false);
+
+                if (result.IsError)
+                    return BadRequest(new ApiErrorResponse(result.Error, result.ErrorDescription));
+
+                return Ok(new RefreshTokenResponse(
+                    result.AccessToken,
+                    result.RefreshToken,
+                    result.ExpiresIn));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "POST:/token/refresh");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
     }
 }

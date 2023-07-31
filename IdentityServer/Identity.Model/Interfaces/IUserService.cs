@@ -12,5 +12,6 @@ namespace Identity.Model.Interfaces
         Task<UserResponse> GetUserAsync(string userId, string email);
         Task<IdentityResult> VerifyEmailAsync(EmailVerificationRequest request);
         Task<TokenResponse> TokenAsync(DTOs.Requests.TokenRequest request);
+        Task<TokenResponse> RefreshTokenAsync(DTOs.Requests.RefreshTokenRequestDTO request);
     }
 }
