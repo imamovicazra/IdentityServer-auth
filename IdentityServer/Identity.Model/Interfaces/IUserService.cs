@@ -14,5 +14,6 @@ namespace Identity.Model.Interfaces
         Task<TokenResponse> TokenAsync(DTOs.Requests.TokenRequest request);
         Task<TokenResponse> RefreshTokenAsync(DTOs.Requests.RefreshTokenRequestDTO request);
         Task<TokenRevocationResponse> RevokeTokenAsync(RefreshTokenRequestDTO request);
+        Task<IdentityResult> EditUserAsync(UserUpdateRequest request, string userId);
     }
 }

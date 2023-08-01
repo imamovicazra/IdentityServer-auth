@@ -173,5 +173,29 @@ namespace Identity.API.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
+
+        [HttpPut("edit")]
+        [ProducesResponseType(typeof(IdentityResult), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ActionResult), StatusCodes.Status200OK)]
+        [SwaggerOperation("Edit user info")]
+        public async Task<ActionResult> EditUser([FromBody] UserUpdateRequest request)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                var result = await _userService.EditUserAsync(request,userId).ConfigureAwait(false);
+
+                if (result.Succeeded)
+                    return Ok(result);
+
+                return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "PUT:/users");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
     }
 }

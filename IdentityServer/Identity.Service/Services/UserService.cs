@@ -254,5 +254,31 @@ namespace Identity.Service.Services
                 throw;
             }
         }
+
+        public async Task<IdentityResult> EditUserAsync(UserUpdateRequest request, string userId)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId).ConfigureAwait(false);
+
+                var validationResult = user.UserExistsAndConfirmed();
+
+                if (validationResult.Succeeded)
+                {
+                    user.FirstName = request.FirstName;
+                    user.LastName = request.LastName;
+                    var result = await _userManager.UpdateAsync(user).ConfigureAwait(false);
+                    return result;
+                }
+
+                return validationResult;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, nameof(EditUserAsync));
+                throw;
+            }
+        }
     }
 }
