@@ -197,5 +197,50 @@ namespace Identity.API.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
+
+        [AllowAnonymous]
+        [HttpPost("password/request-reset")]
+        [ProducesResponseType(typeof(IdentityResult), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ActionResult), StatusCodes.Status200OK)]
+        [SwaggerOperation("Send email for resetting password")]
+        public async Task<ActionResult<IdentityResult>> RequestResetPassword([FromBody] RequestResetPasswordRequest request)
+        {
+            try
+            {
+                var result = await _userService.RequestResetPasswordTokenAsync(request).ConfigureAwait(false);
+
+                if (result.Succeeded)
+                    return Ok();
+
+                return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "POST:/password/request-reset");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+        [AllowAnonymous]
+        [HttpPost("password/reset")]
+        [ProducesResponseType(typeof(IdentityResult), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ActionResult), StatusCodes.Status200OK)]
+        [SwaggerOperation("Reset password")]
+        public async Task<ActionResult<IdentityResult>> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            try
+            {
+                var result = await _userService.ResetPasswordAsync(request).ConfigureAwait(false);
+
+                if (result.Succeeded)
+                    return Ok();
+
+                return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "POST:/password/reset");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
     }
 }

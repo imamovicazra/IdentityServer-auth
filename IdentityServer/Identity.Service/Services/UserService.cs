@@ -280,5 +280,71 @@ namespace Identity.Service.Services
                 throw;
             }
         }
+
+        public async Task<IdentityResult> RequestResetPasswordTokenAsync(RequestResetPasswordRequest request)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(request.Email).ConfigureAwait(false);
+
+                var validationResult = user.UserExistsAndConfirmed();
+
+                if (validationResult.Succeeded)
+                {
+                    var result = await _userManager.UpdateSecurityStampAsync(user).ConfigureAwait(false);
+
+                    if (result.Succeeded)
+                    {
+                        var token = await _userManager.GeneratePasswordResetTokenAsync(user).ConfigureAwait(false);
+
+                        token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+                        string url = $"{_request.Scheme}://{_request.Host}/api/Identity/password/reset?email={user.Email}&token={token}";
+                        Dictionary<string, string> bodyParameters = new()
+                        {
+                            { nameof(url), url }
+                        };
+
+                        _authenticationEmailService.SendAsync(Model.Constants.Email.Type.ForgotPassword, user.Email, bodyParameters);
+
+                        return IdentityResult.Success;
+                    }
+
+                    return result;
+                }
+                return validationResult;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, nameof(RequestResetPasswordTokenAsync));
+                throw;
+            }
+        }
+
+        public async Task<IdentityResult> ResetPasswordAsync(ResetPasswordRequest request)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(request.Email).ConfigureAwait(false);
+
+                var validationResult = user.UserExistsAndConfirmed();
+
+                if (validationResult.Succeeded)
+                {
+                    var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(request.Token));
+
+                    var result = await _userManager.ResetPasswordAsync(user, decodedToken, request.Password).ConfigureAwait(false);
+
+                    return result;
+                }
+
+                return validationResult;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, nameof(ResetPasswordAsync));
+                throw;
+            }
+        }
     }
 }
