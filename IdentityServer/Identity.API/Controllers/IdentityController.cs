@@ -202,7 +202,7 @@ namespace Identity.API.Controllers
         [HttpPost("password/request-reset")]
         [ProducesResponseType(typeof(IdentityResult), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ActionResult), StatusCodes.Status200OK)]
-        [SwaggerOperation("Send email for resetting password")]
+        [SwaggerOperation("Send email for password reset")]
         public async Task<ActionResult<IdentityResult>> RequestResetPassword([FromBody] RequestResetPasswordRequest request)
         {
             try
