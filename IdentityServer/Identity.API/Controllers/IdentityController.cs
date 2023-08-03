@@ -242,5 +242,29 @@ namespace Identity.API.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
+
+        [HttpDelete("delete")]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(IActionResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IdentityResult), StatusCodes.Status400BadRequest)]
+        [SwaggerOperation("Delete user")]
+
+        public async Task<IActionResult> DeleteUser([FromQuery] string email)
+        {
+            try
+            {
+                var result = await _userService.DeleteUserAsync(email).ConfigureAwait(false);
+
+                if (result.Succeeded)
+                    return Ok();
+
+                return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "DELETE:/users");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
     }
 }

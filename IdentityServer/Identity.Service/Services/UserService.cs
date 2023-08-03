@@ -346,5 +346,27 @@ namespace Identity.Service.Services
                 throw;
             }
         }
+
+        public async Task<IdentityResult> DeleteUserAsync(string email)
+        {
+            try
+            {
+                ApplicationUser user = await _userManager.FindByEmailAsync(email).ConfigureAwait(false);
+
+                var validationResult = user.UserExistsWithEmail();
+
+                if (!validationResult.Succeeded)
+                    return validationResult;
+
+                var result = await _userManager.DeleteAsync(user).ConfigureAwait(false);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, nameof(DeleteUserAsync));
+                throw;
+            }
+        }
     }
 }

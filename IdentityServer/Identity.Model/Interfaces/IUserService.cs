@@ -17,5 +17,6 @@ namespace Identity.Model.Interfaces
         Task<IdentityResult> EditUserAsync(UserUpdateRequest request, string userId);
         Task<IdentityResult> RequestResetPasswordTokenAsync(RequestResetPasswordRequest request);
         Task<IdentityResult> ResetPasswordAsync(ResetPasswordRequest request);
+        Task<IdentityResult> DeleteUserAsync(string email);
     }
 }
